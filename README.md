@@ -1,0 +1,2 @@
+# BottleHunt
+Puzzle Hunt Bot
