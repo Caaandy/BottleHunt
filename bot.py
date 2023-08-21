@@ -2,13 +2,14 @@
 
 import discord
 from dataclasses import dataclass
-from strsimpy.cosine import Cosine
+from strsimpy.levenshtein import Levenshtein
 import yaml
+from typing import List
 
 configFile = open("config.yaml", 'r')
 config = yaml.safe_load(configFile)
 
-cosine = Cosine(2)
+simAlg = Levenshtein()
 
 token = config['BOT']['TOKEN']
 
@@ -17,6 +18,7 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 teamList = []
+
 
 @dataclass
 class TeamData:
@@ -35,12 +37,11 @@ class TeamData:
         self.currentPuzzle = kwargs['currentPuzzle']
         self.members = kwargs['members']
 
-    async def fetchMembers(self) -> list[discord.Member]:
+    async def fetchMembers(self) -> List[discord.Member]:
         returnMembers = []
         for memberID in self.members:
             returnMembers.append(await guild.fetch_member(memberID))
         return returnMembers
-
 
 
 @client.event
@@ -65,7 +66,7 @@ async def on_message(message):
 
     user = message.author
 
-    #answerchannel ID vom team rausfinden
+    # answerchannel ID vom team rausfinden
     userTeam = None
     for team in teamList:
         for member in await team.fetchMembers():
@@ -75,23 +76,22 @@ async def on_message(message):
     if message.channel.id == userTeam.answerID:
         await switch(str(message.content), userTeam, message.channel)
 
+
 async def switch(answer, userTeam, channel):
     puzzleNr = userTeam.currentPuzzle
     if puzzleNr != '10':
-        similarity = cosine.similarity(str(config['Puzzles']['ANTWORT' + str(puzzleNr)]), answer.lower())
-        if similarity == 1:
+        distance = simAlg.distance(str(config['Puzzles']['ANTWORT' + str(puzzleNr)]), answer.lower())
+        print(distance)
+        if distance == 0:
             await channel.send(f'{answer} ist richtig!')
             userTeam.currentPuzzle += 1
-            #nächstes Puzzle schicken
-        elif similarity >= 1:
+            # nächstes Puzzle schicken
+        elif distance <= round(len(answer) * 0.2):
             await channel.send(f'{answer} ist nah dran!')
-            await channel.send(f'Wert: {similarity}')
+            await channel.send(f'Wert: {distance}')
         else:
             await channel.send(f'Deine Mudda ist {answer}')
-            await channel.send(f'Wert: {similarity}')
+            await channel.send(f'Wert: {distance}')
 
 
 client.run(token)
-
-
-
