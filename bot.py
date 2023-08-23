@@ -102,7 +102,8 @@ async def switch(answer, userTeam, channel):
                 await questChannel.send(str(aufgabe))
 
             if userTeam.currentPuzzle == 6:
-                #await channel.send(file=discord.File(r'C:\Users\phili\Pictures\0_PuzzleHunt\6_LU17\Genesis.mp3'))
+                #await channel.send(file=discord.File(r'C:\Users\phili\Pictures\0_PuzzleHunt\Audio.mp3'))
+                # await channel.send(file=discord.File(r'C:\Users\phili\Pictures\0_PuzzleHunt\Text.docx'))
                 await questChannel.send(file=discord.File(r'C:\Users\phili\Music\Youtube\Dune_OST_–_Main_Theme_Suite_ _Hans_Zimmer.mp3'))
                 await questChannel.send(file=discord.File(r'C:\Users\phili\Documents\PnP\blood on the clocktower\bad-moon-rising.character-reference.pdf'))
 
