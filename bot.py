@@ -6,7 +6,8 @@ from strsimpy.levenshtein import Levenshtein
 import yaml
 from typing import List
 from random import randint
-from discord.ext import commands
+import time
+import math
 
 configFile = open("config.yaml", 'r', encoding='UTF-8')
 config = yaml.safe_load(configFile)
@@ -27,7 +28,7 @@ teamList = []
 @dataclass
 class TeamData:
     rolename: str
-    teamname: str
+    timer: float
     answerID: int
     questID: int
     currentPuzzle: int
@@ -35,7 +36,7 @@ class TeamData:
 
     def __init__(self, **kwargs):
         self.rolename = kwargs['rolename']
-        self.teamname = kwargs['teamname']
+        self.timer = time.time()
         self.answerID = kwargs['answerID']
         self.questID = kwargs['questID']
         self.currentPuzzle = kwargs['currentPuzzle']
@@ -69,7 +70,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.author == client.user or message.author.id == 472509126010994689:
+    if message.author == client.user: #or message.author.id == 472509126010994689:
         return
 
     user = message.author
@@ -88,11 +89,16 @@ async def on_message(message):
 
 async def switch(answer, userTeam, channel):
     puzzleNr = userTeam.currentPuzzle
+    timer = userTeam.timer
     if puzzleNr != '10':
-        # distance kann keine Umlaute oder ß
         distance = simAlg.distance(str(config['Puzzles']['ANTWORT' + str(puzzleNr)]), answer.lower())
         if distance == 0:
             await channel.send(f'{answer} ist richtig!')
+
+            #timer
+            minuten = math.floor((time.time() - timer) / 60)
+            sekunden = round((time.time() - timer) % 60, 2)
+            await channel.send(f'Zeit für Puzzle ' + str(puzzleNr) + ': ' + str(minuten) + ' Minuten ' + str(sekunden) + ' Sekunden')
 
             userTeam.currentPuzzle += 1
 
@@ -106,6 +112,8 @@ async def switch(answer, userTeam, channel):
                 # await channel.send(file=discord.File(r'C:\Users\phili\Pictures\0_PuzzleHunt\Text.docx'))
                 await questChannel.send(file=discord.File(r'C:\Users\phili\Music\Youtube\Dune_OST_–_Main_Theme_Suite_ _Hans_Zimmer.mp3'))
                 await questChannel.send(file=discord.File(r'C:\Users\phili\Documents\PnP\blood on the clocktower\bad-moon-rising.character-reference.pdf'))
+
+            userTeam.timer = time.time()
 
         elif distance <= round(len(answer) * 0.2):
             await channel.send(f'{answer} ist nah dran!')
